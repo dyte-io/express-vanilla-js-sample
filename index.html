@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dyte meeting test</title>
+    <!-- Import UI Kit via CDN -->
+    <script type="module">
+        import { defineCustomElements } from 'https://cdn.jsdelivr.net/npm/@dytesdk/ui-kit@1.47.0/loader/index.es2017.js';
+        defineCustomElements();
+    </script>
+    <!-- Import Web Core via CDN -->
+    <script src="https://cdn.dyte.in/core/dyte-1.10.1.js"></script>
+    <style>
+        .wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .meeting-controls {
+            display: flex;
+            gap: 16px;
+            margin: 16px auto;
+        }
+        .meeting-container {
+            height: 80vh;
+            width: 80vw;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="meeting-controls">
+            <button id="init-button" type="button" onclick="initMeeting()">Join Meeting</button>
+        </div>
+        <div class="meeting-container">
+            <dyte-meeting id="my-meeting" mode="fill"></dyte-meeting>
+        </div>
+    </div>
+    <script>
+        const createMeeting = async (title) => {
+            const response = await fetch('/api/create-meeting', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ title }),
+            })
+            const data = await response.json();
+            return data.id;
+        }
+        const addParticipant = async (name, email, meetingId) => {
+            const response = await fetch('/api/add-participant', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ name, email, meetingId }),
+            })
+            const data = await response.json();
+            return data.token;
+        }
+        const initMeeting = async () => {
+            document.querySelector('#init-button').disabled = true;
+            const meetingId = await createMeeting('Test meeting');
+            const authToken = await addParticipant('Student', 'student@dyte.io', meetingId);
+            const meeting = await DyteClient.init({
+                authToken
+            });
+            document.getElementById('my-meeting').meeting = meeting;
+        }
+    </script>
+</body>
+
+</html>
